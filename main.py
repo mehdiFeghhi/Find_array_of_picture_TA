@@ -1,85 +1,113 @@
-def isTheSame(coral1, coral2):
+class Rec:
 
-    return coral1 == coral2
+    def __init__(self, x1, x2, h):
+        self.left = x1
+        self.right = x2
+        self.high = h
 
+    @classmethod
+    def make_rec(cls, list):
+        return cls(list[0], list[1], list[2])
 
-def remove_duplicate(dic1, dic2):
-    duplicate = dic2["duplicate"].copy()
-    duplicate += [item for item in dic1["duplicate"] if item not in dic2["duplicate"]]
-    # for item in dic1.get("duplicate"):
-    #     if item not in dic2.get("duplicate"):
-    #         duplicate.append(item)
-    print(dic1)
-    print(dic2)
-    print("///////")
-
-    for i in dic1["happen_once"]:
-
-        for j in duplicate:
-
-            if isTheSame(i,j):
-                dic1["happen_once"].remove(i)
-                print("_______________________________________________")
-                print(dic1)
-                break
-
-    for c in dic2["happen_once"]:
-
-        for d in duplicate:
-
-            if isTheSame(c,d):
-                dic2["happen_once"].remove(c)
-                print("_______________________________________________")
-                print(dic2)
-                break
-
-    for k in dic1["happen_once"]:
-
-        for h in dic2["happen_once"]:
-
-            if isTheSame(k,h):
-                duplicate.append(k)
-                dic1["happen_once"].remove(k)
-                dic2["happen_once"].remove(h)
-                print("_______________________________________________")
-                print(dic1)
-                print(dic2)
-                break
-
-    print("***************************************************************8")
-
-    return  {"happen_once":dic1["happen_once"]+dic2["happen_once"],"duplicate":duplicate}
+    def __str__(self):
+        return "Rectangel :\n" + "Left = " + str(self.left) + "\nRight = " + str(self.right) + "\nHigh = " + str(self.high)
 
 
+def marege(list1, list2):
+    i = j = 0
+    result = []
+    while i < len(list2):
 
+        while j < len(list1):
 
+            if i == len(list2):
+                result.append(list1[j])
+                j += 1
 
+            elif list1[j].right > list2[i].left:
+                result.append(Rec.make_rec([list1[j].left, list2[i].left, list1[j].high]))
 
+                if list2[i].right >= list1[j].right:
+                    result.append(Rec.make_rec([list2[i].left, list1[j].right, max(list1[j].high, list2[i].high)]))
+                    if list2[i].right != list1[j].right:
+                        list2[i] = Rec.make_rec([list1[j].right, list2[i].right, list2[i].high])
+                        j += 1
 
-def Single_memeber(list_of_input):
-    if  len(list_of_input) == 1:
-        return {"happen_once": list_of_input, "duplicate": []}
-    elif len(list_of_input) == 2:
-            if isTheSame(list_of_input[0],list_of_input[1]):
-                return {"happen_once": [], "duplicate": [list_of_input[0]]}
+                    else:
+                        j += 1
+                        i += 1
+                else:
+                    result.append(Rec.make_rec([list2[i].left, list2[i].right, max(list1[j].high, list2[i].high)]))
+                    list1[j] = Rec.make_rec([list2[i].right, list1[j].right, list1[j].high])
+                    i += 1
             else:
-                return {"happen_once": list_of_input, "duplicate": []}
+
+                result.append(list1[j])
+                j += 1
+
+        if i < len(list2):
+            result.append(list2[i])
+            i += 1
+
+    return result
+
+
+def find_all_rectangle(list_rec):
+    size = len(list_rec)
+    if size == 1:
+        return list_rec
+    elif size == 2:  # اگر دوتا مستطیل از هم جدا بودند
+        if list_rec[0].right <= list_rec[1].left:
+            return list_rec
+        else:  # اگر دوتا مستطیل با هم تداخل داشتند
+
+            if list_rec[0].right <= list_rec[1].right:
+                return [Rec.make_rec([list_rec[0].left, list_rec[1].left, list_rec[0].high]),
+                        Rec.make_rec([list_rec[1].left, list_rec[0].right, max(list_rec[0].high, list_rec[1].high)]),
+                        Rec.make_rec([list_rec[0].right, list_rec[1].right, list_rec[1].high])]
+            else:
+                return [Rec.make_rec([list_rec[0].left, list_rec[1].left, list_rec[0].high]),
+                        Rec.make_rec([list_rec[1].left, list_rec[1].right, max(list_rec[0].high, list_rec[1].high)]),
+                        Rec.make_rec([list_rec[1].right, list_rec[0].right, list_rec[0].high])]
 
     else:
-        size_of_list = len(list_of_input)
-        print(size_of_list//2)
-        result_list = remove_duplicate(Single_memeber(list_of_input[:size_of_list // 2]), Single_memeber(list_of_input[size_of_list // 2:]))
-        return result_list
+
+        return marege(find_all_rectangle(list_rec[:(size // 2)+1]), find_all_rectangle(list_rec[(size // 2)+1:]))
+
+
+def calculate_area(all_rectangle):
+    result = 0
+    for i in all_rectangle:
+        print(i)
+        print((i.right - i.left) * i.high)
+        print("__________________________________")
+        result += (i.right - i.left) * i.high
+
+    return result
+
+
+def print_all_Rec(all_rectangle):
+    for obj in all_rectangle:
+        print(obj)
+        print("__________________________________")
 
 
 def main():
+    number_rectangle = int(input())
 
-    list_of_input = input().split()
-    x = Single_memeber(list_of_input)
-    print(".......................................................")
-    print(x)
+    list_rectangle = []
+    for i in range(number_rectangle):
+        list_rectangle.append(list(map(float, input().split())))
+
+    list_Rec_Object = list(map(Rec.make_rec, list_rectangle))
+    list_Rec_Object.sort(key=lambda x: x.left)
+    print_all_Rec(list_Rec_Object)
+    all_rectangle = find_all_rectangle(list_Rec_Object)
+    # print_all_Rec(all_rectangle)
+    result = calculate_area(all_rectangle)
+
+    print(result)
+
 
 if __name__ == '__main__':
-
     main()
-
